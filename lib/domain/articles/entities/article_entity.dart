@@ -8,8 +8,6 @@ final class ArticleEntity {
   final List<String> tags;
   final int readTime;
   final int createdDate;
-  final int likes;
-  final int comments;
 
   const ArticleEntity({
     required this.id,
@@ -21,8 +19,6 @@ final class ArticleEntity {
     required this.content,
     required this.tags,
     required this.createdDate,
-    required this.likes,
-    required this.comments,
   });
 
   ArticleEntity copyWith({
@@ -46,8 +42,6 @@ final class ArticleEntity {
       readTime: readTime ?? this.readTime,
       tags: tags ?? this.tags,
       createdDate: createdDate ?? this.createdDate,
-      likes: likes ?? this.likes,
-      comments: comments ?? this.comments,
     );
   }
 }

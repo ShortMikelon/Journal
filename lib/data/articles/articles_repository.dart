@@ -26,8 +26,6 @@ final class ArticlesRepository {
       ],
       tags: ['Flutter', 'React Native'],
       createdDate: 1711200000,
-      likes: 120,
-      comments: 30,
     ),
     ArticleEntity(
       id: 2,
@@ -42,8 +40,6 @@ final class ArticlesRepository {
       ],
       tags: ['AI', 'Технологии'],
       createdDate: 1711300000,
-      likes: 200,
-      comments: 45,
     ),
     ArticleEntity(
       id: 3,
@@ -58,8 +54,6 @@ final class ArticlesRepository {
       ],
       tags: ['Dart', 'Программирование'],
       createdDate: 1711400000,
-      likes: 85,
-      comments: 20,
     ),
     ArticleEntity(
       id: 4,
@@ -79,8 +73,6 @@ final class ArticlesRepository {
       ],
       tags: ['Безопасность', 'IT'],
       createdDate: 1711500000,
-      likes: 95,
-      comments: 25,
     ),
     ArticleEntity(
       id: 5,
@@ -101,8 +93,6 @@ final class ArticlesRepository {
 
       tags: ['Web3', 'Блокчейн'],
       createdDate: 1711600000,
-      likes: 150,
-      comments: 35,
     ),
     ArticleEntity(
       id: 6,
@@ -122,8 +112,6 @@ final class ArticlesRepository {
       ],
       tags: ['Rust', 'Программирование'],
       createdDate: 1711700000,
-      likes: 180,
-      comments: 50,
     ),
     ArticleEntity(
       id: 7,
@@ -144,8 +132,6 @@ final class ArticlesRepository {
 
       tags: ['Мобильная разработка', 'IT'],
       createdDate: 1711800000,
-      likes: 220,
-      comments: 60,
     ),
     ArticleEntity(
       id: 8,
@@ -165,8 +151,6 @@ final class ArticlesRepository {
       ],
       tags: ['Big Data', 'Аналитика'],
       createdDate: 1711900000,
-      likes: 135,
-      comments: 40,
     ),
     ArticleEntity(
       id: 9,
@@ -186,8 +170,6 @@ final class ArticlesRepository {
       ],
       tags: ['Фронтенд', 'Разработка'],
       createdDate: 1712000000,
-      likes: 175,
-      comments: 55,
     ),
     ArticleEntity(
       id: 10,
@@ -207,8 +189,6 @@ final class ArticlesRepository {
       ],
       tags: ['Игры', 'Разработка'],
       createdDate: 1712100000,
-      likes: 145,
-      comments: 35,
     ),
     ArticleEntity(
       id: 11,
@@ -228,8 +208,6 @@ final class ArticlesRepository {
       ],
       tags: ['5G', 'Связь'],
       createdDate: 1712700000,
-      likes: 130,
-      comments: 25,
     ),
     ArticleEntity(
       id: 12,
@@ -249,8 +227,6 @@ final class ArticlesRepository {
       ],
       tags: ['Робототехника', 'Технологии'],
       createdDate: 1712800000,
-      likes: 175,
-      comments: 40,
     ),
     ArticleEntity(
       id: 13,
@@ -270,8 +246,6 @@ final class ArticlesRepository {
       ],
       tags: ['AI', 'Медицина'],
       createdDate: 1712900000,
-      likes: 180,
-      comments: 50,
     ),
     ArticleEntity(
       id: 14,
@@ -291,8 +265,6 @@ final class ArticlesRepository {
       ],
       tags: ['Блокчейн', 'Финансы'],
       createdDate: 1713000000,
-      likes: 165,
-      comments: 45,
     ),
     ArticleEntity(
       id: 15,
@@ -313,8 +285,6 @@ final class ArticlesRepository {
 
       tags: ['Технологии', 'Будущее'],
       createdDate: 1713100000,
-      likes: 185,
-      comments: 55,
     ),
     ArticleEntity(
       id: 16,
@@ -334,8 +304,6 @@ final class ArticlesRepository {
       ],
       tags: ['Генетика', 'Биотехнологии'],
       createdDate: 1713200000,
-      likes: 140,
-      comments: 35,
     ),
     ArticleEntity(
       id: 17,
@@ -355,8 +323,6 @@ final class ArticlesRepository {
       ],
       tags: ['Энергетика', 'Экология'],
       createdDate: 1713300000,
-      likes: 175,
-      comments: 50,
     ),
     ArticleEntity(
       id: 18,
@@ -376,8 +342,6 @@ final class ArticlesRepository {
       ],
       tags: ['Транспорт', 'Технологии'],
       createdDate: 1713400000,
-      likes: 190,
-      comments: 45,
     ),
     ArticleEntity(
       id: 19,
@@ -397,8 +361,6 @@ final class ArticlesRepository {
       ],
       tags: ['Космос', 'Наука'],
       createdDate: 1713500000,
-      likes: 210,
-      comments: 60,
     ),
     ArticleEntity(
       id: 20,
@@ -418,8 +380,6 @@ final class ArticlesRepository {
       ],
       tags: ['Наука', 'Технологии'],
       createdDate: 1713600000,
-      likes: 185,
-      comments: 55,
     ),
   ];
 
