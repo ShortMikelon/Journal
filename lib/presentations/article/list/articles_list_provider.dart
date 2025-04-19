@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:journal/data/articles/articles_repository.dart';
+import 'package:journal/data/tag/tag_repository.dart';
 import 'package:journal/domain/articles/entities/article_list_preview.dart';
 
 part 'articles_list_state.dart';
 
 final class ArticlesListProvider with ChangeNotifier {
   final ArticlesRepository _articlesRepository;
+  final TagRepository _tagRepository;
 
   ArticlesListState _state = LoadingState();
   ArticlesListState get state => _state;
@@ -18,8 +20,9 @@ final class ArticlesListProvider with ChangeNotifier {
   final _scrollController = ScrollController();
   ScrollController get scrollController => _scrollController;
 
-  ArticlesListProvider({required ArticlesRepository articlesRepository})
-      : _articlesRepository = articlesRepository {
+  ArticlesListProvider({required ArticlesRepository articlesRepository, required TagRepository tagRepository})
+      : _articlesRepository = articlesRepository,
+        _tagRepository = tagRepository {
     _scrollController.addListener(_onScroll);
     loadArticles();
   }
@@ -35,7 +38,7 @@ final class ArticlesListProvider with ChangeNotifier {
       _state = LoadingState();
       notifyListeners();
 
-      final tags = await _articlesRepository.getAllTags();
+      final tags = await _tagRepository.getAllTags();
       final articles = await _articlesRepository.getAllArticles(
         page: _page,
         limit: _limit,
