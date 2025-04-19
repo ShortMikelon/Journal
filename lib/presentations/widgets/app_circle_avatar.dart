@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 class AppCircleAvatar extends StatelessWidget {
   final String username;
   final String? avatarUrl;
-  final int radius;
+  final double radius;
 
   const AppCircleAvatar({super.key, required this.username, this.avatarUrl, this.radius = 24});
 
@@ -24,6 +24,7 @@ class AppCircleAvatar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return CircleAvatar(
+      radius: radius,
       backgroundColor: avatarUrl == null ? _getBackgroundColor(username) : null,
       backgroundImage: avatarUrl != null ? NetworkImage(avatarUrl!) : null,
       child:
