@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_sticky_header/flutter_sticky_header.dart';
-import 'package:journal/data/articles/articles_repository.dart';
+import 'package:journal/data/tag/tag_repository.dart';
 import 'package:journal/di/presentation_di.dart';
 import 'package:journal/domain/articles/entities/article_list_preview.dart';
 import 'package:journal/presentations/routes.dart';
@@ -20,6 +20,13 @@ final class ArticlesListPage extends StatelessWidget {
         builder: (context, provider, _) {
           return Scaffold(
             bottomNavigationBar: const _BottomNavBar(),
+            floatingActionButton: FloatingActionButton(
+              onPressed: () {
+                Navigator.pushNamed(context, Routes.articleCreateSandbox);
+              },
+              backgroundColor: Theme.of(context).primaryColor,
+              child: const Icon(Icons.add),
+            ),
             body: _ArticlesBody(
               state: provider.state,
               scrollController: provider.scrollController,
@@ -114,12 +121,7 @@ final class _TagsHorizontalList extends StatelessWidget {
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
-        border: Border(
-          bottom: BorderSide(
-            color: Colors.grey[300]!,
-            width: 1,
-          ),
-        ),
+        border: Border(bottom: BorderSide(color: Colors.grey[300]!, width: 1)),
       ),
       padding: const EdgeInsets.symmetric(horizontal: 16),
       alignment: Alignment.centerLeft,
