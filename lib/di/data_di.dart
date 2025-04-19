@@ -1,6 +1,7 @@
 import 'package:journal/data/articles/articles_repository.dart';
 import 'package:journal/data/articles/draft/draft_articles_repository.dart';
 import 'package:journal/data/authors/authors_repository.dart';
+import 'package:journal/data/tag/tag_repository.dart';
 import 'package:journal/di/domain_di.dart';
 
 final class DataDi {
@@ -16,6 +17,9 @@ final class DataDi {
 
   late final _draftRepository = DraftArticlesRepository();
   DraftArticlesRepository get draftArticleRepository => _draftRepository;
+
+  late final _tagRepository = TagRepository();
+  TagRepository get tagRepository => _tagRepository;
 
   DataDi._internal();
 }

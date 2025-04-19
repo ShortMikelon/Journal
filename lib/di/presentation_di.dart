@@ -8,7 +8,7 @@ final class PresentationDi {
 
   factory PresentationDi() => _instance;
 
-  late final _articlesListProvider = ArticlesListProvider(articlesRepository: DataDi().articlesRepository);
+  late final _articlesListProvider = ArticlesListProvider(articlesRepository: DataDi().articlesRepository, tagRepository: DataDi().tagRepository);
   ArticlesListProvider get articlesListProvider => _articlesListProvider;
 
   late final _articleDetailsProvider = ArticleDetailsProvider(articlesRepository: DataDi().articlesRepository);
