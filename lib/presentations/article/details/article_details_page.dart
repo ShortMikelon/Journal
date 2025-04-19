@@ -93,7 +93,7 @@ final class ArticleDetailsPage extends StatelessWidget {
                             isCurrentUserAuthor: article.isCurrentUserAuthor,
                             onFollowPressed: () => context.read<ArticleDetailsProvider>().followOnPressed(),
                           ),
-                          const SizedBox(height: 8),
+                          const SizedBox(height: 16),
                           _ArticleInteractionBar(
                             likes: article.likes,
                             isLiked: article.isLiked,
@@ -102,7 +102,9 @@ final class ArticleDetailsPage extends StatelessWidget {
                             bookmarkOnPressed: provider.bookmarkOnPressed,
                             commentOnPressed: scrollToComments,
                           ),
-                          const Divider(color: Colors.grey),
+
+                          const SizedBox(height: 16),
+
                           _ArticleContent(content: article.content),
                           const Divider(color: Colors.grey),
                           const SizedBox(height: 16),
@@ -166,23 +168,23 @@ final class _ArticleHeader extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(title, style: Theme.of(context).textTheme.headlineLarge),
-        const SizedBox(height: 12),
+        Text(title, style: Theme.of(context).textTheme.headlineLarge?.copyWith(fontWeight: FontWeight.bold)),
+        const SizedBox(height: 24),
         Row(
           children: [
-            AppCircleAvatar(username: author, avatarUrl: authorAvatarUrl),
-            const SizedBox(width: 12),
+            AppCircleAvatar(username: author, avatarUrl: authorAvatarUrl, radius: 28),
+            const SizedBox(width: 16),
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
                   author,
-                  style: const TextStyle(fontWeight: FontWeight.bold),
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
                 ),
                 const SizedBox(height: 4),
                 Text(
                   '$followers подписчиков',
-                  style: Theme.of(context).textTheme.bodySmall,
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(color: Colors.grey[600]),
                 ),
               ],
             ),
@@ -233,7 +235,8 @@ final class _ArticleInteractionBar extends StatelessWidget {
             onPressed: likeOnPressed,
             icon: Icon(
               isLiked ? Icons.favorite : Icons.favorite_border,
-              color: isLiked ? Colors.red : Colors.grey,
+              color: isLiked ? Colors.red : Colors.black,
+              size: 30.0,
             ),
           ),
         ),
@@ -245,21 +248,22 @@ final class _ArticleInteractionBar extends StatelessWidget {
           child: Text(
             key: ValueKey(likes),
             "$likes",
-            style: TextStyle(color: isLiked ? Colors.red : Colors.grey),
+            style: Theme.of(context).textTheme.titleMedium?.copyWith(color: isLiked ? Colors.red : Colors.black),
           ),
         ),
-        const SizedBox(width: 16),
+        const SizedBox(width: 18),
         IconButton(
           onPressed: commentOnPressed,
-          icon: const Icon(Icons.chat_bubble_outline),
+          icon: const Icon(Icons.chat_bubble_outline, size: 30),
         ),
-        Text("$comments"),
+        Text("$comments",  style: Theme.of(context).textTheme.titleMedium),
         const Spacer(),
         IconButton(
           onPressed: bookmarkOnPressed,
-          icon: const Icon(Icons.bookmark_border),
+          icon: const Icon(Icons.bookmark_border, size: 30.0,),
         ),
-        IconButton(onPressed: null, icon: const Icon(Icons.share)),
+        const SizedBox(width: 18),
+        IconButton(onPressed: null, icon: const Icon(Icons.share, size: 30.0,)),
       ],
     );
   }
@@ -280,7 +284,7 @@ final class _ArticleContent extends StatelessWidget {
               padding: const EdgeInsets.only(bottom: 16),
               child: Text(
                 paragraph,
-                style: Theme.of(context).textTheme.bodyLarge,
+                style: Theme.of(context).textTheme.titleLarge,
               ),
             );
           }).toList(),
@@ -326,19 +330,19 @@ final class _ArticleFooter extends StatelessWidget {
                   side: BorderSide(color: Colors.black),
                 ),
               ),
-              child: Text(isFollowed ? 'Following' : 'Follow'),
+              child: Text(isFollowed ? 'Подписаны' : 'Подписатся', style: Theme.of(context).textTheme.titleSmall),
             ),
           ],
         ),
         const SizedBox(height: 8),
         Text(
-          "Written by $author",
+          "Автор: $author",
           style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
         ),
         const SizedBox(height: 8),
-        Text("$followers Followers", style: TextStyle(color: Colors.grey[600])),
+        Text("$followers подписчики", style: Theme.of(context).textTheme.titleSmall?.copyWith(color: Colors.grey[600])),
         const SizedBox(height: 12),
-        Text(authorDescription, style: const TextStyle(color: Colors.blue)),
+        Text(authorDescription, style: Theme.of(context).textTheme.titleSmall?.copyWith(color: Colors.blue)),
         const SizedBox(height: 12),
       ],
     );
