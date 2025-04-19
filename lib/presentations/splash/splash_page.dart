@@ -37,12 +37,6 @@ class _SplashContentState extends State<_SplashContent> with SingleTickerProvide
   }
 
   @override
-  void dispose() {
-    context.read<SplashProvider>().dispose();
-    super.dispose();
-  }
-
-  @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
