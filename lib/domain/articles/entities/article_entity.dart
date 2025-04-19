@@ -4,7 +4,6 @@ final class ArticleEntity {
   final String title;
   final String subtitle;
   final String? imageUrl;
-  final List<String> content;
   final List<String> tags;
   final int readTime;
   final int createdDate;
@@ -16,7 +15,6 @@ final class ArticleEntity {
     required this.subtitle,
     this.readTime = 0,
     this.imageUrl,
-    required this.content,
     required this.tags,
     required this.createdDate,
   });
@@ -26,7 +24,6 @@ final class ArticleEntity {
     int? authorId,
     String? title,
     String? subtitle,
-    List<String>? body,
     List<String>? tags,
     int? createdDate,
     int? readTime,
@@ -38,7 +35,6 @@ final class ArticleEntity {
       authorId: authorId ?? this.authorId,
       title: title ?? this.title,
       subtitle: subtitle ?? this.subtitle,
-      content: body ?? content,
       readTime: readTime ?? this.readTime,
       tags: tags ?? this.tags,
       createdDate: createdDate ?? this.createdDate,

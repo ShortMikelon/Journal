@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:journal/data/articles/articles_repository.dart';
+import 'package:journal/domain/articles/entities/draft_article.dart';
 import 'package:journal/presentations/article/details/entities/ui_comment.dart';
 
 class ArticleDetailsEntity {
@@ -12,7 +13,7 @@ class ArticleDetailsEntity {
   final String? authorAvatarUrl;
   final String date;
   final int readTime;
-  final List<String> content;
+  final List<BodyComponent> content;
   final List<String> tags;
   final List<UiComment> comments;
   final int likes;
@@ -55,7 +56,7 @@ class ArticleDetailsEntity {
     String? authorAvatarUrl,
     String? date,
     int? readTime,
-    List<String>? content,
+    List<BodyComponent>? content,
     List<String>? tags,
     List<UiComment>? comments,
     int? likes,

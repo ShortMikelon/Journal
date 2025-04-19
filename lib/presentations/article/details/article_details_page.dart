@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:journal/common/utils/datetime_utils.dart';
 import 'package:journal/di/data_di.dart';
+import 'package:journal/domain/articles/entities/draft_article.dart';
 import 'package:journal/presentations/article/details/article_details_provider.dart';
 import 'package:journal/presentations/article/details/entities/ui_comment.dart';
 import 'package:journal/presentations/widgets/app_circle_avatar.dart';
@@ -270,12 +271,14 @@ final class _ArticleInteractionBar extends StatelessWidget {
 }
 
 final class _ArticleContent extends StatelessWidget {
-  final List<String> content;
+  final List<BodyComponent> content;
 
   const _ArticleContent({required this.content});
 
   @override
   Widget build(BuildContext context) {
+    content.sort((a, b) => a.order.compareTo(b.order));
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children:
@@ -283,7 +286,7 @@ final class _ArticleContent extends StatelessWidget {
             return Padding(
               padding: const EdgeInsets.only(bottom: 16),
               child: Text(
-                paragraph,
+                paragraph.text,
                 style: Theme.of(context).textTheme.titleLarge,
               ),
             );
