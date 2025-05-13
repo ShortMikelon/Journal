@@ -1,10 +1,14 @@
+import 'dart:typed_data';
+
+import 'package:journal/presentations/article/list/articles_list_page.dart';
+import 'package:journal/presentations/widgets/article_list_card.dart';
+
 final class ArticleListPreviewEntity {
   final int id;
   final String title;
   final String subtitle;
-  final String? imageUrl;
-  final String author;
-  final String? authorAvatarUrl;
+  final Uint8List? imageBytes;
+  final List<ArticleAuthorUi> authors;
   final int likes;
   final int comments;
   final String createdAt;
@@ -13,9 +17,8 @@ final class ArticleListPreviewEntity {
     required this.id,
     required this.title,
     required this.subtitle,
-    this.imageUrl,
-    required this.author,
-    this.authorAvatarUrl,
+    this.imageBytes,
+    required this.authors,
     required this.likes,
     required this.comments,
     required this.createdAt,
@@ -25,9 +28,9 @@ final class ArticleListPreviewEntity {
     int? id,
     String? title,
     String? subtitle,
-    String? imageUrl,
-    String? author,
-    String? authorAvatarUrl,
+    Uint8List? imageBytes,
+    List<ArticleAuthorUi>? authors,
+    Uint8List? authorAvatarBytes,
     int? likes,
     int? comments,
     String? createdAt,
@@ -36,9 +39,8 @@ final class ArticleListPreviewEntity {
       id: id ?? this.id,
       title: title ?? this.title,
       subtitle: subtitle ?? this.subtitle,
-      imageUrl: imageUrl ?? this.imageUrl,
-      author: author ?? this.author,
-      authorAvatarUrl: authorAvatarUrl ?? this.authorAvatarUrl,
+      imageBytes: imageBytes ?? this.imageBytes,
+      authors: authors ?? this.authors,
       likes: likes ?? this.likes,
       comments: comments ?? this.comments,
       createdAt: createdAt ?? this.createdAt,

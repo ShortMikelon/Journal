@@ -1,11 +1,20 @@
+import 'dart:typed_data';
+
 import 'package:flutter/material.dart';
 
-class AppCircleAvatar extends StatelessWidget {
+final class AppCircleAvatar extends StatelessWidget {
   final String username;
   final String? avatarUrl;
+  final Uint8List? avatarBytes;
   final double radius;
 
-  const AppCircleAvatar({super.key, required this.username, this.avatarUrl, this.radius = 24});
+  const AppCircleAvatar({
+    super.key,
+    required this.username,
+    this.avatarUrl,
+    this.avatarBytes,
+    this.radius = 24,
+  });
 
   Color _getBackgroundColor(String name) {
     final colors = [
@@ -23,12 +32,20 @@ class AppCircleAvatar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    ImageProvider? imageProvider;
+    if (avatarUrl != null) {
+      imageProvider = NetworkImage(avatarUrl!);
+    } else if (avatarBytes != null) {
+      imageProvider = MemoryImage(avatarBytes!);
+    }
+
     return CircleAvatar(
       radius: radius,
-      backgroundColor: avatarUrl == null ? _getBackgroundColor(username) : null,
-      backgroundImage: avatarUrl != null ? NetworkImage(avatarUrl!) : null,
+      backgroundColor:
+          imageProvider == null ? _getBackgroundColor(username) : null,
+      backgroundImage: imageProvider,
       child:
-          avatarUrl == null
+          imageProvider == null
               ? Text(
                 username[0].toUpperCase(),
                 style: const TextStyle(

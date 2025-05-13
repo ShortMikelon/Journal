@@ -1,10 +1,13 @@
+import 'dart:typed_data';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_sticky_header/flutter_sticky_header.dart';
 import 'package:journal/data/tag/tag_repository.dart';
-import 'package:journal/di/presentation_di.dart';
+import 'package:journal/di/data_di.dart';
 import 'package:journal/domain/articles/entities/article_list_preview.dart';
 import 'package:journal/presentations/routes.dart';
 import 'package:journal/presentations/widgets/app_circle_avatar.dart';
+import 'package:journal/presentations/widgets/article_list_card.dart';
 import 'package:provider/provider.dart';
 
 import 'articles_list_provider.dart';
@@ -15,21 +18,170 @@ final class ArticlesListPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ChangeNotifierProvider(
-      create: (_) => PresentationDi().articlesListProvider,
+      create:
+          (_) => ArticlesListProvider(
+            articlesRepository: DataDi().articlesRepository,
+            tagRepository: DataDi().tagRepository,
+          ),
       child: Consumer<ArticlesListProvider>(
         builder: (context, provider, _) {
-          return Scaffold(
-            bottomNavigationBar: const _BottomNavBar(),
-            floatingActionButton: FloatingActionButton(
-              onPressed: () {
-                Navigator.pushNamed(context, Routes.articleCreateSandbox);
-              },
-              backgroundColor: Theme.of(context).primaryColor,
-              child: const Icon(Icons.add),
-            ),
-            body: _ArticlesBody(
-              state: provider.state,
-              scrollController: provider.scrollController,
+          return RefreshIndicator(
+            backgroundColor: Colors.white,
+            color: Colors.black,
+            onRefresh: () => provider.refresh(),
+            child: CustomScrollView(
+              controller: provider.scrollController,
+              physics: const AlwaysScrollableScrollPhysics(),
+              slivers: [
+                SliverAppBar(
+                  floating: true,
+                  snap: false,
+                  expandedHeight: 100,
+                  flexibleSpace: Align(
+                    alignment: const Alignment(-1.0, 0.0),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 16.0,
+                        vertical: 8.0,
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            "Главная",
+                            style: Theme.of(
+                              context,
+                            ).textTheme.headlineSmall?.copyWith(
+                              fontWeight: FontWeight.bold,
+                              color: Colors.black,
+                            ),
+                            overflow: TextOverflow.ellipsis,
+                          ),
+
+                          SizedBox(
+                            width: 250,
+                            child: TextField(
+                              autofocus: false,
+                              decoration: InputDecoration(
+                                hintText: 'Поиск по имени',
+                                prefixIcon: Icon(
+                                  Icons.search,
+                                  color: Colors.grey[300],
+                                ),
+                                filled: true,
+                                fillColor: Colors.grey[100],
+                                // светлый синий фон
+                                border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(18),
+                                  borderSide: BorderSide(
+                                    color: Colors.black,
+                                    width: 1.5,
+                                  ),
+                                ),
+                                enabledBorder: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(20),
+                                  borderSide: BorderSide(
+                                    color: Colors.black,
+                                    width: 1.5,
+                                  ),
+                                ),
+                                focusedBorder: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(20),
+                                  borderSide: BorderSide(
+                                    color: Colors.black,
+                                    width: 1.5,
+                                  ),
+                                ),
+                                contentPadding: const EdgeInsets.symmetric(
+                                  horizontal: 20,
+                                  vertical: 12,
+                                ),
+                                hintStyle: TextStyle(
+                                  color: Colors.grey[600],
+                                  fontSize: 16,
+                                  fontStyle: FontStyle.italic,
+                                ),
+                              ),
+                              onChanged: (value) {
+                                context
+                                    .read<ArticlesListProvider>()
+                                    .searchArticles(value);
+                              },
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+                ...switch (provider.state) {
+                  LoadingState() => [_Loading()],
+                  ErrorState(:final message) => [_Error(message)],
+                  SuccessState(:final articles, :final tags) => [
+                    SliverStickyHeader(
+                      header: _TagsHorizontalList(
+                        tags: tags,
+                        tagOnPressed:
+                            (tag) => context
+                                .read<ArticlesListProvider>()
+                                .toggleTag(tag.name),
+                        selectedTag:
+                            context.read<ArticlesListProvider>().selectedTag,
+                      ),
+                      sliver: _ArticlesList(articles),
+                    ),
+                  ],
+                  LoadingMoreState(:final articles, :final tags) => [
+                    SliverStickyHeader(
+                      header: _TagsHorizontalList(
+                        tags: tags,
+                        tagOnPressed:
+                            (tag) => context
+                                .read<ArticlesListProvider>()
+                                .toggleTag(tag.name),
+                        selectedTag:
+                            context.read<ArticlesListProvider>().selectedTag,
+                      ),
+                      sliver: _ArticlesList(articles),
+                    ),
+                    _Loading(),
+                  ],
+                  LoadingMoreErrorState(
+                    :final articles,
+                    :final errorMessage,
+                    :final tags,
+                  ) =>
+                    [
+                      _TagsHorizontalList(
+                        tags: tags,
+                        tagOnPressed:
+                            (tag) => context
+                                .read<ArticlesListProvider>()
+                                .toggleTag(tag.name),
+                        selectedTag:
+                            context.read<ArticlesListProvider>().selectedTag,
+                      ),
+                      _ArticlesList(articles),
+                      _Error(errorMessage),
+                    ],
+                  LoadingMoreEmptyState(:final articles, :final tags) => [
+                    SliverStickyHeader(
+                      header: _TagsHorizontalList(
+                        tags: tags,
+                        tagOnPressed:
+                            (tag) => context
+                                .read<ArticlesListProvider>()
+                                .toggleTag(tag.name),
+                        selectedTag:
+                            context.read<ArticlesListProvider>().selectedTag,
+                      ),
+                      sliver: _ArticlesList(articles),
+                    ),
+                    const _Empty("Больше нет статей"),
+                  ],
+                  _ => [const SliverToBoxAdapter(child: SizedBox.shrink())],
+                },
+              ],
             ),
           );
         },
@@ -38,91 +190,21 @@ final class ArticlesListPage extends StatelessWidget {
   }
 }
 
-class _ArticlesBody extends StatelessWidget {
-  final ArticlesListState state;
-  final ScrollController scrollController;
-
-  const _ArticlesBody({required this.state, required this.scrollController});
-
-  @override
-  Widget build(BuildContext context) {
-    return CustomScrollView(
-      controller: scrollController,
-      slivers: [
-        SliverAppBar(
-          floating: true,
-          snap: false,
-          expandedHeight: 100,
-          flexibleSpace: Align(
-            alignment: const Alignment(-1.0, 0.0),
-            child: Padding(
-              padding: const EdgeInsets.symmetric(
-                horizontal: 16.0,
-                vertical: 16.0,
-              ),
-              child: Text(
-                "Главная",
-                style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                  fontWeight: FontWeight.bold,
-                  color: Colors.black,
-                ),
-              ),
-            ),
-          ),
-        ),
-        ...switch (state) {
-          LoadingState() => [_Loading()],
-          ErrorState(:final message) => [_Error(message)],
-          SuccessState(:final articles, :final tags) => [
-            SliverStickyHeader(
-              header: _TagsHorizontalList(tags: tags, tagOnPressed: null),
-              sliver: _ArticlesList(articles),
-            ),
-          ],
-          LoadingMoreState(:final articles, :final tags) => [
-            SliverStickyHeader(
-              header: _TagsHorizontalList(tags: tags, tagOnPressed: null),
-              sliver: _ArticlesList(articles),
-            ),
-            _Loading(),
-          ],
-          LoadingMoreErrorState(
-            :final articles,
-            :final errorMessage,
-            :final tags,
-          ) =>
-            [
-              _TagsHorizontalList(tags: tags, tagOnPressed: null),
-              _ArticlesList(articles),
-              _Error(errorMessage),
-            ],
-          LoadingMoreEmptyState(:final articles, :final tags) => [
-            SliverStickyHeader(
-              header: _TagsHorizontalList(tags: tags, tagOnPressed: null),
-              sliver: _ArticlesList(articles),
-            ),
-            const _Empty("Больше нет статей"),
-          ],
-          _ => [const SliverToBoxAdapter(child: SizedBox.shrink())],
-        },
-      ],
-    );
-  }
-}
-
 final class _TagsHorizontalList extends StatelessWidget {
   final List<Tag> tags;
   final void Function(Tag)? tagOnPressed;
+  final String? selectedTag;
 
-  const _TagsHorizontalList({required this.tags, required this.tagOnPressed});
+  const _TagsHorizontalList({
+    required this.tags,
+    required this.tagOnPressed,
+    required this.selectedTag,
+  });
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        border: Border(bottom: BorderSide(color: Colors.grey[300]!, width: 1)),
-      ),
+      decoration: BoxDecoration(color: Colors.white),
       padding: const EdgeInsets.symmetric(horizontal: 16),
       alignment: Alignment.centerLeft,
       height: 40,
@@ -132,10 +214,23 @@ final class _TagsHorizontalList extends StatelessWidget {
         separatorBuilder: (_, __) => VerticalDivider(color: Colors.grey[200]),
         itemBuilder: (context, index) {
           final tag = tags[index];
+          final isSelected = selectedTag == tag.name;
           return TextButton(
+            style: TextButton.styleFrom(
+              backgroundColor:
+                  isSelected
+                      ? Theme.of(context).primaryColor.withValues(alpha: 10.1)
+                      : null,
+            ),
             child: Text(
               tag.name,
-              style: Theme.of(context).textTheme.titleMedium,
+              style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                color:
+                    isSelected
+                        ? Theme.of(context).colorScheme.onPrimary
+                        : Colors.grey[500],
+                fontWeight: isSelected ? FontWeight.bold : null,
+              ),
             ),
             onPressed: () {
               if (tagOnPressed != null) tagOnPressed!(tag);
@@ -167,12 +262,11 @@ final class _ArticlesList extends StatelessWidget {
               arguments: article.id,
             );
           },
-          child: _ArticleListCard(
-            imageUrl: article.imageUrl,
-            authorAvatarUrl: article.authorAvatarUrl,
+          child: ArticleListCard(
+            imageBytes: article.imageBytes,
             title: article.title,
             subtitle: article.subtitle,
-            author: article.author,
+            authors: article.authors,
             date: article.createdAt,
             comments: article.comments,
             likes: article.likes,
@@ -243,175 +337,6 @@ final class _Empty extends StatelessWidget {
           ),
         ),
       ),
-    );
-  }
-}
-
-final class _BottomNavBar extends StatelessWidget {
-  const _BottomNavBar();
-
-  @override
-  Widget build(BuildContext context) {
-    return BottomNavigationBar(
-      items: const [
-        BottomNavigationBarItem(
-          icon: Icon(Icons.home_outlined),
-          activeIcon: Icon(Icons.home),
-          label: '',
-        ),
-        BottomNavigationBarItem(
-          icon: Icon(Icons.search_outlined),
-          activeIcon: Icon(Icons.search),
-          label: '',
-        ),
-        BottomNavigationBarItem(
-          icon: Icon(Icons.bookmark_outline),
-          activeIcon: Icon(Icons.bookmark),
-          label: '',
-        ),
-        BottomNavigationBarItem(
-          icon: Icon(Icons.person_outline),
-          activeIcon: Icon(Icons.person),
-          label: '',
-        ),
-      ],
-    );
-  }
-}
-
-final class _ArticleListCard extends StatelessWidget {
-  final String? authorAvatarUrl;
-  final String title;
-  final String subtitle;
-  final String? imageUrl;
-  final String author;
-  final String date;
-  final int likes;
-  final int comments;
-
-  const _ArticleListCard({
-    required this.title,
-    required this.subtitle,
-    this.imageUrl,
-    required this.authorAvatarUrl,
-    required this.author,
-    required this.date,
-    required this.likes,
-    required this.comments,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Card(
-      margin: EdgeInsets.all(6),
-
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      elevation: 0,
-      child: Padding(
-        padding: const EdgeInsets.all(12.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const SizedBox(height: 6),
-            _AuthorInfo(author: author, avatarUrl: authorAvatarUrl),
-            const SizedBox(height: 12),
-            _ArticleTitle(title: title),
-            const SizedBox(height: 8),
-            _ArticleSubtitle(subtitle: subtitle),
-            const SizedBox(height: 26),
-            _ArticleStats(date: date, likes: likes, comments: comments),
-            const SizedBox(height: 6),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-final class _AuthorInfo extends StatelessWidget {
-  final String author;
-  final String? avatarUrl;
-
-  const _AuthorInfo({required this.author, required this.avatarUrl});
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      children: [
-        AppCircleAvatar(avatarUrl: avatarUrl, username: author),
-        const SizedBox(width: 8),
-        Text(author, style: Theme.of(context).textTheme.titleSmall),
-      ],
-    );
-  }
-}
-
-final class _ArticleTitle extends StatelessWidget {
-  final String title;
-
-  const _ArticleTitle({required this.title});
-
-  @override
-  Widget build(BuildContext context) {
-    return Text(
-      title,
-      style: Theme.of(
-        context,
-      ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
-    );
-  }
-}
-
-final class _ArticleSubtitle extends StatelessWidget {
-  final String subtitle;
-
-  const _ArticleSubtitle({required this.subtitle});
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          subtitle,
-          style: Theme.of(
-            context,
-          ).textTheme.bodyMedium?.copyWith(color: Colors.grey[500]),
-        ),
-      ],
-    );
-  }
-}
-
-final class _ArticleStats extends StatelessWidget {
-  final String date;
-  final int likes;
-  final int comments;
-
-  const _ArticleStats({
-    required this.date,
-    required this.likes,
-    required this.comments,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      children: [
-        const Icon(Icons.star, size: 22, color: Colors.orange),
-        const SizedBox(width: 8),
-        Text(date, style: Theme.of(context).textTheme.titleSmall),
-        const SizedBox(width: 16),
-        const Icon(Icons.remove_red_eye, size: 22, color: Colors.grey),
-        const SizedBox(width: 8),
-        Text("$likes", style: Theme.of(context).textTheme.titleSmall),
-        const SizedBox(width: 16),
-        const Icon(Icons.comment, size: 22, color: Colors.grey),
-        const SizedBox(width: 8),
-        Text("$comments", style: Theme.of(context).textTheme.titleSmall),
-        const Spacer(),
-        const Icon(Icons.more_vert, size: 24, color: Colors.grey),
-      ],
     );
   }
 }

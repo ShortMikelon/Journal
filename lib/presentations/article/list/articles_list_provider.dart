@@ -1,3 +1,5 @@
+import 'dart:developer';
+
 import 'package:flutter/material.dart';
 import 'package:journal/data/articles/articles_repository.dart';
 import 'package:journal/data/tag/tag_repository.dart';
@@ -20,11 +22,43 @@ final class ArticlesListProvider with ChangeNotifier {
   final _scrollController = ScrollController();
   ScrollController get scrollController => _scrollController;
 
+  String _searchQuery = '';
+  String get searchQuery => _searchQuery;
+
+  String? _selectedTag = null;
+  String? get selectedTag => _selectedTag;
+
+  bool _isSearchVisible = false;
+  bool get isSearchVisible => _isSearchVisible;
+
+  void toggleSearchVisibility() {
+    _isSearchVisible = !_isSearchVisible;
+    notifyListeners();
+  }
+
   ArticlesListProvider({required ArticlesRepository articlesRepository, required TagRepository tagRepository})
       : _articlesRepository = articlesRepository,
         _tagRepository = tagRepository {
     _scrollController.addListener(_onScroll);
     loadArticles();
+  }
+
+  Future<void> searchArticles(String query) async {
+    _searchQuery = query;
+    _page = 0;
+    _hasMore = true;
+    await loadArticles();
+  }
+
+  Future<void> toggleTag(String tag) async {
+    if (_selectedTag == tag) {
+      _selectedTag = null;
+    } else {
+      _selectedTag = tag;
+    }
+    _page = 0;
+    _hasMore = true;
+    await loadArticles();
   }
 
   Future<void> loadArticles() async {
@@ -42,6 +76,8 @@ final class ArticlesListProvider with ChangeNotifier {
       final articles = await _articlesRepository.getAllArticles(
         page: _page,
         limit: _limit,
+        searchQuery: _searchQuery,
+        selectedTag: _selectedTag,
       );
 
       if (articles.isEmpty) {
@@ -76,6 +112,8 @@ final class ArticlesListProvider with ChangeNotifier {
       final newArticles = await _articlesRepository.getAllArticles(
         page: _page,
         limit: _limit,
+        searchQuery: _searchQuery,
+        selectedTag: _selectedTag,
       );
 
       if (newArticles.isEmpty) {
@@ -111,10 +149,22 @@ final class ArticlesListProvider with ChangeNotifier {
     }
   }
 
+  Future<void> refresh() async {
+    _page = 0;
+    _hasMore = true;
+    await loadArticles();
+  }
+
   @override
   void dispose() {
     _scrollController.removeListener(_onScroll);
     _scrollController.dispose();
     super.dispose();
+  }
+
+  @override
+  void notifyListeners() {
+    log("state: ${_state.runtimeType}");
+    super.notifyListeners();
   }
 }

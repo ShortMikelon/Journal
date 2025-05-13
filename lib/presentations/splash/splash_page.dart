@@ -1,3 +1,5 @@
+import 'dart:developer';
+
 import 'package:flutter/material.dart';
 import 'package:journal/di/presentation_di.dart';
 import 'package:journal/presentations/routes.dart';
@@ -25,19 +27,26 @@ class _SplashContent extends StatefulWidget {
 
 class _SplashContentState extends State<_SplashContent> with SingleTickerProviderStateMixin {
   @override
+  @override
   void initState() {
     super.initState();
     context.read<SplashProvider>().init(this);
-
-    Future.delayed(const Duration(seconds: 3), () {
-      if (mounted) {
-        Navigator.pushReplacementNamed(context, Routes.home);
-      }
-    });
   }
 
   @override
   Widget build(BuildContext context) {
+    final provider = context.watch<SplashProvider>();
+    final event = provider.isSignInEvent?.value;
+
+    if (event != null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        Navigator.pushReplacementNamed(
+          context,
+          event ? Routes.home : Routes.auth,
+        );
+      });
+    }
+
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: Center(

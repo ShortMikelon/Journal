@@ -1,16 +1,18 @@
+import 'dart:developer';
+import 'dart:typed_data';
+
 import 'package:flutter/material.dart';
 import 'package:journal/data/articles/articles_repository.dart';
+import 'package:journal/data/users/users_repository.dart';
 import 'package:journal/domain/articles/entities/draft_article.dart';
+import 'package:journal/domain/users/users_settings.dart';
 import 'package:journal/presentations/article/details/entities/ui_comment.dart';
 
 class ArticleDetailsEntity {
   final int id;
   final String title;
   final String? imageUrl;
-  final int authorId;
-  final String author;
-  final String authorDescription;
-  final String? authorAvatarUrl;
+  final List<ArticleAuthors> authors;
   final String date;
   final int readTime;
   final List<BodyComponent> content;
@@ -18,77 +20,9 @@ class ArticleDetailsEntity {
   final List<UiComment> comments;
   final int likes;
   final bool isLiked;
-  final int followers;
-  final bool isFollowed;
   final String currentUsername;
-  final String? currentUserAvatarUrl;
+  final Uint8List? currentUserAvatarBytes;
   final bool isCurrentUserAuthor;
-
-  const ArticleDetailsEntity({
-    required this.id,
-    required this.title,
-    this.imageUrl,
-    required this.authorId,
-    required this.author,
-    required this.authorDescription,
-    this.authorAvatarUrl,
-    required this.date,
-    required this.readTime,
-    required this.content,
-    required this.tags,
-    required this.comments,
-    required this.likes,
-    required this.isLiked,
-    required this.followers,
-    required this.isFollowed,
-    required this.currentUsername,
-    this.currentUserAvatarUrl,
-    required this.isCurrentUserAuthor,
-  });
-
-  ArticleDetailsEntity copyWith({
-    int? id,
-    String? title,
-    String? imageUrl,
-    int? authorId,
-    String? author,
-    String? authorDescription,
-    String? authorAvatarUrl,
-    String? date,
-    int? readTime,
-    List<BodyComponent>? content,
-    List<String>? tags,
-    List<UiComment>? comments,
-    int? likes,
-    bool? isLiked,
-    int? followers,
-    bool? isFollow,
-    String? currentUsername,
-    String? currentUserAvatarUrl,
-    bool? isCurrentUserAuthor,
-  }) {
-    return ArticleDetailsEntity(
-      id: id ?? this.id,
-      title: title ?? this.title,
-      imageUrl: imageUrl ?? this.imageUrl,
-      authorId: authorId ?? this.authorId,
-      author: author ?? this.author,
-      authorDescription: authorDescription ?? this.authorDescription,
-      authorAvatarUrl: authorAvatarUrl ?? this.authorAvatarUrl,
-      date: date ?? this.date,
-      readTime: readTime ?? this.readTime,
-      content: content ?? this.content,
-      tags: tags ?? this.tags,
-      comments: comments ?? this.comments,
-      likes: likes ?? this.likes,
-      isLiked: isLiked ?? this.isLiked,
-      followers: followers ?? this.followers,
-      isFollowed: isFollow ?? isFollowed,
-      currentUsername: currentUsername ?? this.currentUsername,
-      currentUserAvatarUrl: currentUserAvatarUrl ?? this.currentUserAvatarUrl,
-      isCurrentUserAuthor: isCurrentUserAuthor ?? this.isCurrentUserAuthor,
-    );
-  }
 
   @override
   bool operator ==(Object other) =>
@@ -98,10 +32,7 @@ class ArticleDetailsEntity {
           id == other.id &&
           title == other.title &&
           imageUrl == other.imageUrl &&
-          authorId == other.authorId &&
-          author == other.author &&
-          authorDescription == other.authorDescription &&
-          authorAvatarUrl == other.authorAvatarUrl &&
+          authors == other.authors &&
           date == other.date &&
           readTime == other.readTime &&
           content == other.content &&
@@ -109,10 +40,8 @@ class ArticleDetailsEntity {
           comments == other.comments &&
           likes == other.likes &&
           isLiked == other.isLiked &&
-          followers == other.followers &&
-          isFollowed == other.isFollowed &&
           currentUsername == other.currentUsername &&
-          currentUserAvatarUrl == other.currentUserAvatarUrl &&
+          currentUserAvatarBytes == other.currentUserAvatarBytes &&
           isCurrentUserAuthor == other.isCurrentUserAuthor;
 
   @override
@@ -120,10 +49,7 @@ class ArticleDetailsEntity {
       id.hashCode ^
       title.hashCode ^
       imageUrl.hashCode ^
-      authorId.hashCode ^
-      author.hashCode ^
-      authorDescription.hashCode ^
-      authorAvatarUrl.hashCode ^
+      authors.hashCode ^
       date.hashCode ^
       readTime.hashCode ^
       content.hashCode ^
@@ -131,15 +57,103 @@ class ArticleDetailsEntity {
       comments.hashCode ^
       likes.hashCode ^
       isLiked.hashCode ^
-      followers.hashCode ^
-      isFollowed.hashCode ^
       currentUsername.hashCode ^
-      currentUserAvatarUrl.hashCode ^
+      currentUserAvatarBytes.hashCode ^
       isCurrentUserAuthor.hashCode;
+
+  const ArticleDetailsEntity({
+    required this.id,
+    required this.title,
+    this.imageUrl,
+    required this.authors,
+    required this.date,
+    required this.readTime,
+    required this.content,
+    required this.tags,
+    required this.comments,
+    required this.likes,
+    required this.isLiked,
+    required this.currentUsername,
+    this.currentUserAvatarBytes,
+    required this.isCurrentUserAuthor,
+  });
+
+  ArticleDetailsEntity copyWith({
+    int? id,
+    String? title,
+    String? imageUrl,
+    List<ArticleAuthors>? authors,
+    String? date,
+    int? readTime,
+    List<BodyComponent>? content,
+    List<String>? tags,
+    List<UiComment>? comments,
+    int? likes,
+    bool? isLiked,
+    String? currentUsername,
+    Uint8List? currentUserAvatarBytes,
+    bool? isCurrentUserAuthor,
+  }) {
+    return ArticleDetailsEntity(
+      id: id ?? this.id,
+      title: title ?? this.title,
+      imageUrl: imageUrl ?? this.imageUrl,
+      authors: authors ?? this.authors,
+      date: date ?? this.date,
+      readTime: readTime ?? this.readTime,
+      content: content ?? this.content,
+      tags: tags ?? this.tags,
+      comments: comments ?? this.comments,
+      likes: likes ?? this.likes,
+      isLiked: isLiked ?? this.isLiked,
+      currentUsername: currentUsername ?? this.currentUsername,
+      currentUserAvatarBytes:
+          currentUserAvatarBytes ?? this.currentUserAvatarBytes,
+      isCurrentUserAuthor: isCurrentUserAuthor ?? this.isCurrentUserAuthor,
+    );
+  }
+}
+
+final class ArticleAuthors {
+  final int authorId;
+  final String author;
+  final String authorDescription;
+  final Uint8List? authorAvatarUrl;
+  final int followers;
+  final bool isFollowed;
+
+  const ArticleAuthors({
+    required this.authorId,
+    required this.author,
+    required this.authorDescription,
+    this.authorAvatarUrl,
+    required this.followers,
+    required this.isFollowed,
+  });
+
+  ArticleAuthors copyWith({
+    int? authorId,
+    String? author,
+    String? authorDescription,
+    Uint8List? authorAvatarUrl,
+    int? followers,
+    bool? isFollowed,
+  }) {
+    return ArticleAuthors(
+      authorId: authorId ?? this.authorId,
+      author: author ?? this.author,
+      authorDescription: authorDescription ?? this.authorDescription,
+      authorAvatarUrl: authorAvatarUrl ?? this.authorAvatarUrl,
+      followers: followers ?? this.followers,
+      isFollowed: isFollowed ?? this.isFollowed,
+    );
+  }
 }
 
 class ArticleDetailsProvider with ChangeNotifier {
   final ArticlesRepository _articlesRepository;
+  final UsersRepository _usersRepository;
+  final UserSettings _userSettings;
 
   ArticlesListState _state = LoadingState();
 
@@ -147,35 +161,49 @@ class ArticleDetailsProvider with ChangeNotifier {
 
   ArticleDetailsProvider({
     required ArticlesRepository articlesRepository,
-  }) : _articlesRepository = articlesRepository;
+    required UsersRepository usersRepository,
+    required UserSettings userSettings,
+  }) : _articlesRepository = articlesRepository,
+       _usersRepository = usersRepository,
+       _userSettings = userSettings;
 
   Future<void> fetchArticle(int articleId) async {
     try {
-      await Future.delayed(const Duration(seconds: 1));
-      final articleDetails = await _articlesRepository.getArticleById(articleId);
+      final articleDetails = await _articlesRepository.getArticleById(
+        articleId,
+      );
 
       _state = SuccessState(articleDetails);
-    } catch (e) {
+    } catch (e, stackTrace) {
+      log(e.toString());
+      log(stackTrace.toString());
       _state = ErrorState("Failed to load article");
     }
     notifyListeners();
   }
 
-  Future<void> followOnPressed() async {
+  Future<void> followOnPressed(ArticleAuthors author) async {
     if (_state is! SuccessState) return;
-    
+
     final currentState = _state as SuccessState;
     final article = currentState.article;
-    
+
     try {
-      await _articlesRepository.toggleFollow(article.authorId);
-      
-      _state = SuccessState(
-        article.copyWith(
-          followers: article.isFollowed ? article.followers - 1 : article.followers + 1,
-          isFollow: !article.isFollowed,
+      final id = await _userSettings.id;
+      await _usersRepository.toggleFollow(
+        authorId: author.authorId,
+        userId: id!,
+      );
+
+      article.authors.add(
+        author.copyWith(
+          followers:
+              author.isFollowed ? author.followers - 1 : author.followers + 1,
+          isFollowed: !author.isFollowed,
         ),
       );
+
+      _state = SuccessState(article.copyWith(authors: [...article.authors]));
       notifyListeners();
     } catch (e) {
       // Handle error if needed
@@ -184,13 +212,13 @@ class ArticleDetailsProvider with ChangeNotifier {
 
   Future<void> likeOnPressed() async {
     if (_state is! SuccessState) return;
-    
+
     final currentState = _state as SuccessState;
     final article = currentState.article;
-    
+
     try {
       await _articlesRepository.likeArticle(article.id);
-      
+
       _state = SuccessState(
         article.copyWith(
           likes: article.isLiked ? article.likes - 1 : article.likes + 1,
@@ -208,7 +236,7 @@ class ArticleDetailsProvider with ChangeNotifier {
   }
 
   Future<void> bookmarkOnPressed() async {
-    // TODO: Implement bookmark logic
+    // TODO: Implement bookmarks logic
   }
 }
 
@@ -227,5 +255,3 @@ final class ErrorState extends ArticlesListState {
 
   ErrorState(this.message);
 }
-
-

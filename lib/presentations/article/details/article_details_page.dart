@@ -1,6 +1,9 @@
+import 'dart:typed_data';
+
 import 'package:flutter/material.dart';
 import 'package:journal/common/utils/datetime_utils.dart';
 import 'package:journal/di/data_di.dart';
+import 'package:journal/di/domain_di.dart';
 import 'package:journal/domain/articles/entities/draft_article.dart';
 import 'package:journal/presentations/article/details/article_details_provider.dart';
 import 'package:journal/presentations/article/details/entities/ui_comment.dart';
@@ -18,6 +21,8 @@ final class ArticleDetailsPage extends StatelessWidget {
       create: (context) {
         return ArticleDetailsProvider(
           articlesRepository: DataDi().articlesRepository,
+          usersRepository: DataDi().usersRepository,
+          userSettings: DomainDi().userSettings,
         )..fetchArticle(articleId);
       },
       child: Consumer<ArticleDetailsProvider>(
@@ -87,12 +92,9 @@ final class ArticleDetailsPage extends StatelessWidget {
                           _ArticleHeader(
                             title: article.title,
                             date: article.date,
-                            author: article.author,
-                            authorAvatarUrl: article.authorAvatarUrl,
-                            followers: article.followers,
-                            isFollowed: article.isFollowed,
+                            authors: article.authors,
                             isCurrentUserAuthor: article.isCurrentUserAuthor,
-                            onFollowPressed: () => context.read<ArticleDetailsProvider>().followOnPressed(),
+                            onFollowPressed: (author) => context.read<ArticleDetailsProvider>().followOnPressed(author),
                           ),
                           const SizedBox(height: 16),
                           _ArticleInteractionBar(
@@ -110,11 +112,7 @@ final class ArticleDetailsPage extends StatelessWidget {
                           const Divider(color: Colors.grey),
                           const SizedBox(height: 16),
                           _ArticleFooter(
-                            author: article.author,
-                            authorDescription: article.authorDescription,
-                            authorAvatarUrl: article.authorAvatarUrl,
-                            followers: article.followers,
-                            isFollowed: article.isFollowed,
+                            authors: article.authors,
                             isCurrentUserAuthor: article.isCurrentUserAuthor,
                             followOnPressed: provider.followOnPressed,
                           ),
@@ -128,11 +126,10 @@ final class ArticleDetailsPage extends StatelessWidget {
                         commentsKey: commentsKey,
                         comments: article.comments,
                         username: article.currentUsername,
-                        userAvatarUrl: article.currentUserAvatarUrl,
+                        userAvatarBytes: article.currentUserAvatarBytes,
                       ),
                     ),
                   ],
-                  _ => [const SliverToBoxAdapter(child: SizedBox.shrink())],
                 },
               ],
             ),
@@ -145,20 +142,14 @@ final class ArticleDetailsPage extends StatelessWidget {
 
 final class _ArticleHeader extends StatelessWidget {
   final String title;
-  final String author;
-  final String? authorAvatarUrl;
-  final int followers;
-  final bool isFollowed;
+  final List<ArticleAuthors> authors;
   final String date;
-  final void Function()? onFollowPressed;
+  final void Function(ArticleAuthors author)? onFollowPressed;
   final bool isCurrentUserAuthor;
 
   const _ArticleHeader({
     required this.title,
-    required this.author,
-    required this.isFollowed,
-    required this.followers,
-    this.authorAvatarUrl,
+    required this.authors,
     required this.date,
     required this.onFollowPressed,
     required this.isCurrentUserAuthor,
@@ -169,36 +160,85 @@ final class _ArticleHeader extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(title, style: Theme.of(context).textTheme.headlineLarge?.copyWith(fontWeight: FontWeight.bold)),
+        Text(
+          title,
+          style: Theme.of(context).textTheme.headlineLarge?.copyWith(fontWeight: FontWeight.bold),
+        ),
+        const SizedBox(height: 8),
+        Text(
+          date,
+          style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: Colors.grey[600]),
+        ),
         const SizedBox(height: 24),
-        Row(
-          children: [
-            AppCircleAvatar(username: author, avatarUrl: authorAvatarUrl, radius: 28),
-            const SizedBox(width: 16),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  author,
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  '$followers подписчиков',
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(color: Colors.grey[600]),
-                ),
-              ],
-            ),
-            const SizedBox(width: 12),
-            if (!isCurrentUserAuthor)
-              TextButton(
-                onPressed: onFollowPressed,
-                child: Text(
-                  isFollowed ? "Отписаться" : '+ Подписаться',
-                  style: Theme.of(context).textTheme.labelLarge,
-                ),
-              ),
-          ],
+        SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          child: Row(
+            children: authors.map(
+                  (author) {
+                return Container(
+                  margin: const EdgeInsets.only(right: 16),
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    border: Border.all(color: Colors.grey[300]!),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  width: 260,
+                  child: Row(
+                    children: [
+                      AppCircleAvatar(
+                        username: author.author,
+                        avatarBytes: author.authorAvatarUrl,
+                        radius: 24,
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              author.author,
+                              style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                            if (author.authorDescription.isNotEmpty) ...[
+                              const SizedBox(height: 4),
+                              Text(
+                                author.authorDescription,
+                                style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Colors.grey[700]),
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ],
+                            const SizedBox(height: 4),
+                            Text(
+                              '${author.followers} подписчиков',
+                              style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Colors.grey[600]),
+                            ),
+                            if (!isCurrentUserAuthor)
+                              Align(
+                                alignment: Alignment.centerLeft,
+                                child: TextButton(
+                                  onPressed: () => onFollowPressed?.call(author),
+                                  child: Text(
+                                    author.isFollowed ? 'Отписаться' : '+ Подписаться',
+                                    style: Theme.of(context).textTheme.labelLarge,
+                                  ),
+                                  style: TextButton.styleFrom(
+                                    padding: EdgeInsets.zero,
+                                    minimumSize: const Size(0, 0),
+                                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                                  ),
+                                ),
+                              ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              },
+            ).toList(),
+          ),
         ),
       ],
     );
@@ -281,36 +321,27 @@ final class _ArticleContent extends StatelessWidget {
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
-      children:
-          content.map((paragraph) {
-            return Padding(
-              padding: const EdgeInsets.only(bottom: 16),
-              child: Text(
-                paragraph.text,
-                style: Theme.of(context).textTheme.titleLarge,
-              ),
-            );
-          }).toList(),
+      children: content.map((component) {
+        if (component is TextBodyComponent) {
+          return TextBodyComponentWidget(component: component);
+        } else if (component is ImageBodyComponent) {
+          return ImageBodyComponentWidget(component: component);
+        } else {
+          return SizedBox.shrink();
+        }
+      }).toList(),
     );
   }
 }
 
 final class _ArticleFooter extends StatelessWidget {
-  final String? authorAvatarUrl;
-  final String author;
-  final int followers;
+  final List<ArticleAuthors> authors;
   final bool isCurrentUserAuthor;
-  final bool isFollowed;
-  final String authorDescription;
-  final void Function() followOnPressed;
+  final void Function(ArticleAuthors author) followOnPressed;
 
   const _ArticleFooter({
-    this.authorAvatarUrl,
-    required this.author,
-    required this.followers,
+    required this.authors,
     required this.isCurrentUserAuthor,
-    required this.isFollowed,
-    required this.authorDescription,
     required this.followOnPressed,
   });
 
@@ -318,35 +349,75 @@ final class _ArticleFooter extends StatelessWidget {
   Widget build(BuildContext context) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
-      children: <Widget>[
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: <Widget>[
-            AppCircleAvatar(username: author, avatarUrl: authorAvatarUrl),
-            if (!isCurrentUserAuthor) ElevatedButton(
-              onPressed: followOnPressed,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: isFollowed ? Colors.white : Colors.black,
-                foregroundColor: isFollowed ? Colors.black : Colors.white,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(20),
-                  side: BorderSide(color: Colors.black),
+      children: [
+        const Text(
+          'Авторы статьи',
+          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+        ),
+        const SizedBox(height: 12),
+        SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          child: Row(
+            children: authors.map((author) {
+              return Container(
+                width: 260,
+                margin: const EdgeInsets.only(right: 16),
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  border: Border.all(color: Colors.grey[300]!),
+                  borderRadius: BorderRadius.circular(12),
                 ),
-              ),
-              child: Text(isFollowed ? 'Подписаны' : 'Подписатся', style: Theme.of(context).textTheme.titleSmall),
-            ),
-          ],
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        AppCircleAvatar(
+                          username: author.author,
+                          avatarBytes: author.authorAvatarUrl,
+                          radius: 24,
+                        ),
+                        if (!isCurrentUserAuthor)
+                          ElevatedButton(
+                            onPressed: () => followOnPressed(author),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: author.isFollowed ? Colors.white : Colors.black,
+                              foregroundColor: author.isFollowed ? Colors.black : Colors.white,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(20),
+                                side: const BorderSide(color: Colors.black),
+                              ),
+                              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                              textStyle: Theme.of(context).textTheme.titleSmall,
+                            ),
+                            child: Text(author.isFollowed ? 'Подписаны' : 'Подписаться'),
+                          ),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
+                    Text(
+                      "Автор: ${author.author}",
+                      style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      "${author.followers} подписчики",
+                      style: Theme.of(context).textTheme.titleSmall?.copyWith(color: Colors.grey[600]),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      author.authorDescription,
+                      style: Theme.of(context).textTheme.titleSmall?.copyWith(color: Colors.blue),
+                      maxLines: 3,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ],
+                ),
+              );
+            }).toList(),
+          ),
         ),
-        const SizedBox(height: 8),
-        Text(
-          "Автор: $author",
-          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-        ),
-        const SizedBox(height: 8),
-        Text("$followers подписчики", style: Theme.of(context).textTheme.titleSmall?.copyWith(color: Colors.grey[600])),
-        const SizedBox(height: 12),
-        Text(authorDescription, style: Theme.of(context).textTheme.titleSmall?.copyWith(color: Colors.blue)),
-        const SizedBox(height: 12),
       ],
     );
   }
@@ -355,13 +426,13 @@ final class _ArticleFooter extends StatelessWidget {
 final class _ArticleCommentsSection extends StatelessWidget {
   final List<UiComment> comments;
   final String username;
-  final String? userAvatarUrl;
+  final Uint8List? userAvatarBytes;
   final GlobalKey commentsKey;
 
   const _ArticleCommentsSection({
     required this.comments,
     required this.username,
-    this.userAvatarUrl,
+    this.userAvatarBytes,
     required this.commentsKey,
   });
 
@@ -382,7 +453,7 @@ final class _ArticleCommentsSection extends StatelessWidget {
         const SizedBox(height: 16),
         Row(
           children: [
-            AppCircleAvatar(username: username, avatarUrl: userAvatarUrl),
+            AppCircleAvatar(username: username, avatarBytes: userAvatarBytes),
             const SizedBox(width: 12),
             Text(username, style: Theme.of(context).textTheme.titleMedium),
           ],
@@ -478,3 +549,50 @@ final class _ArticleComment extends StatelessWidget {
     );
   }
 }
+
+
+class TextBodyComponentWidget extends StatelessWidget {
+  final TextBodyComponent component;
+
+  const TextBodyComponentWidget({super.key,
+    required this.component,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 16),
+      child: Text(
+        component.text,
+        style: Theme.of(context).textTheme.titleLarge,
+      ),
+    );
+  }
+}
+
+class ImageBodyComponentWidget extends StatelessWidget {
+  final ImageBodyComponent component;
+
+  const ImageBodyComponentWidget({super.key,
+    required this.component,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Image.memory(component.imageBytes),
+          const SizedBox(height: 8),
+          Text(
+            component.description,
+            style: Theme.of(context).textTheme.bodyMedium,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
